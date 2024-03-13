@@ -22,6 +22,7 @@ npm start
 
 ### Run: 
 ```
+npm run dev
 double click "index.html" file
 ```
 
