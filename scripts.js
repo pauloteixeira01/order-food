@@ -64,20 +64,124 @@ const updateCart = () => {
   cart.forEach(item => {
     const cartItemElement = document.createElement('div');
     cartItemElement.innerHTML = `
-      <div>
+      <div class="flex items-center justify-between">
         <div>
-          <p>${item.name}</p>
-          <p>${item.quantity}</p>
-          <p>${item.price}</p>
+          <p class="font-medium">${item.name}</p>
+          <p>Quantidade: ${item.quantity}</p>
+          <p class="font-medium mt-2">${item.price.toFixed(2)}</p>
         </div>
-        <div>
-          <button>
-            Remover
-          </button>
-        </div>
+        
+        <button class="remove-item" data-name="${item.name}">
+          Remover
+        </button>
+        
       </div>
     `
 
+    total += item.price * item.quantity
+
     cartItems.appendChild(cartItemElement)
   })
+
+  cartTotal.textContent = total.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
+
+  cartCount.innerText = cart.length
+}
+
+cartItems.addEventListener('click', (event) => {
+  if(event.target.classList.contains('remove-item')) {
+    const name = event.target.getAttribute('data-name')
+    removeItemCart(name)
+  }
+})
+
+const removeItemCart = (name) => {
+  const index = cart.findIndex(item => item.name === name)
+
+  if(index !== -1) {
+    const item = cart[index]
+
+    if(item.quantity > 1) {
+      item.quantity -= 1
+      updateCart();
+      return;
+    }
+
+    cart.splice(index, 1)
+    updateCart();
+  }
+}
+
+address.addEventListener('input', (event) => {
+  let inputValue = event.target.value;
+
+  if(inputValue !== '') {
+    address.classList.remove('border-red-500')
+    addressWarn.classList.add('hidden')
+  }
+
+})
+
+
+checkoutBtn.addEventListener('click', () => {
+  const isOpen = statusRestaurant();
+  if(!isOpen) {
+    
+    Toastify({
+      text: "Ops! O restaurante está fechado.",
+      duration: 3000,
+      close: true,
+      gravity: "top", 
+      position: "center", 
+      stopOnFocus: true, 
+      style: {
+        background: "#ef4444",
+      },
+    }).showToast();
+
+    return;
+  }
+
+  if(cart.length === 0) return;
+
+  if(address.value === '') {
+    addressWarn.classList.remove("hidden")
+    address.classList.add('border-red-500')
+    return;
+  }
+
+  const cartItems = cart.map(item => {
+    return (
+      ` Ítem: ${item.name} Quantidade: (${item.quantity}) Preço: R$${item.price} | `
+    )
+  }).join("")
+
+  const message = encodeURIComponent(cartItems)
+  const phone = '85986629688'
+
+  window.open(`https://wa.me/${phone}?text=${message} Endereço: ${address.value}`, "_blank")
+
+  cart = [];
+  updateCart()
+})
+
+const statusRestaurant = () => {
+  const data = new Date();
+  const hour = data.getHours()
+
+  return hour >= 18 && hour < 22
+}
+
+const spanItem = document.getElementById('date-span')
+const isOpen = statusRestaurant();
+
+if (isOpen) {
+  spanItem.classList.remove('bg-red-500');
+  spanItem.classList.add('bg-green-600');
+} else { 
+  spanItem .classList.remove('bg-green-600');
+  spanItem.classList.add('bg-red-500');
 }
